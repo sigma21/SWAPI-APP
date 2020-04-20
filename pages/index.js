@@ -1,47 +1,102 @@
-import Layout from '../components/app/Layout';
-import useSWR from 'swr';
-import { useRouter } from 'next/router';
+// import Layout from '../components/app/Layout'
+import fetch from 'node-fetch'
+import Head from 'next/head'
+import { Card, Container } from 'semantic-ui-react'
 
-function fetcher(url) {
-    return fetch(url).then(r => r.json());
-}
+import Movie from '../components/Movie'
+import MovieModal from '../components/MovieModal'
 
-export default function Home() {
-    const { query } = useRouter();
-    const { data, error } = useSWR(`api/randomQuote`, fetcher);
-    const author = data?.author;  // == data && data.author 
-    let quote = data?.quote;
-
-    if (!data) quote = 'Loading...'
-    if (error) quote = 'Failed to fetch the quote. Sorry!'
-
+const StarWars = ({ movies, character }) => {
+    // console.log(movies.characters)
+    console.log(character)
     return (
-        <Layout>
-            <main className='center'>
-                <h1>Homepage</h1>
-                <h2>Here's a random quote for you</h2>
-                <h4 className='quote'>{quote}</h4>
-                {author && <span className='author'>- {author}</span>}
-                <style jsx>{`
-        main {
-            width: 90%;
-            max-width: 900px;
-            margin: 300px auto;
-            text-align: center;
-        }
-        .quote {
-            font-family: cursive;
-            color: #e243de;
-            font-size: 24px;
-            padding-bottom: 10px;
-        }
-        .author{
-            font-family: sans-serif;
-            color: #559834;
-            font-size: 20px;
-        }
-        `}</style>
-            </main>
-        </Layout>
-    );
+        <div className='container'>
+            <Container>
+                <Head>
+                    <title>May The Force Be With You</title>
+                    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css" />
+                </Head>
+                <main>
+                <h1 className='a'>Star Wars Movies</h1>
+
+                <Card.Group itemsPerRow='3' stackable={true} centered={true} textAlign='center'>
+                    {movies.map(movie => <MovieModal character={'xyz'} episode_id={movie.episode_id} title={movie.title} release_date={movie.release_date} director={movie.director} opening_crawl={movie.opening_crawl} />)}
+                </Card.Group>
+                </main>
+                <footer>
+                    <a
+                        href="https://zeit.co?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >Powered by <img src="/zeit.svg" alt="ZEIT Logo" /></a>
+                </footer>
+                </Container>
+                <style jsx>
+                    {`
+                body {
+                    width: 90%;
+                    max-width: 900px;
+                    margin: 300px auto;
+                    text-align: center;
+                }
+
+                .container {
+                    // background-color: #1A1B23;
+                }
+
+                footer {
+                    width: 100%;
+                    height: 100px;
+                    border-top: 1px solid #eaeaea;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
+            
+                footer img {
+                    margin-left: 0.5rem;
+                }
+            
+                footer a {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
+
+
+                `}
+                </style>
+
+        </div>
+    )
+};
+
+//cannot reach data object
+async function getCharacterName(url) {
+    const character = await fetch(`${url}`)
+    const characterdata = await character.json()
+    return characterdata.name
+
 }
+
+
+export async function getServerSideProps() {
+    const res = await fetch(`https://swapi.dev/api/films/`)
+    const data = await res.json()
+    // const character = await getCharacterName(data.results)
+
+    // console.log(data.results[0].characters[0])
+
+    // const character = await fetch(`${data.results[0].characters[0]}`)
+    // const characterdata = await character.json()
+
+    return {
+        props: {
+            movies: data.results,
+            // character: character
+        }
+    }
+}
+
+
+export default StarWars;
